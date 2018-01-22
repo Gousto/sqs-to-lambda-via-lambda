@@ -22,7 +22,7 @@ function pollQueue(queueUrl, functionName, remaining, done) {
 
   sqs.receiveMessage({
     QueueUrl: queueUrl,
-    MaxNumberOfMessages: 1,
+    MaxNumberOfMessages: 10,
     WaitTimeSeconds: 1
   }, function(err, data) {
     if (err) {
@@ -38,22 +38,25 @@ function pollQueue(queueUrl, functionName, remaining, done) {
       return pollQueue(queueUrl, functionName, remaining, done);
     }
 
-    lambda.invoke({
-      FunctionName: functionName,
-      InvocationType: "Event",
-      Payload: JSON.stringify({
-        source: "aws.sqs",
-        QueueUrl: queueUrl,
-        Message: data.Messages[0]
-      })
-    }, function(err) {
-      if (err) {
-        console.log(err);
-        return done();
-      }
+    data.Messages.forEach(function (message) {
+     lambda.invoke({
+       FunctionName: functionName,
+       InvocationType: "Event",
+       Payload: JSON.stringify({
+         source: "aws.sqs",
+         QueueUrl: queueUrl,
+         Message: message
+       })
+     }, function(err) {
+       if (err) {
+         console.log(err);
+         return done();
+       }
+     });
+    })
 
-      return pollQueue(queueUrl, functionName, remaining, done);
-    });
+    return pollQueue(queueUrl, functionName, remaining, done);
+
   });
 }
 
