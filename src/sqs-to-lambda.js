@@ -38,13 +38,26 @@ function pollQueue(queueUrl, functionName, remaining, done) {
       return pollQueue(queueUrl, functionName, remaining, done);
     }
 
+    message = data.Messages[0];
+    sqsMessageId = message.MessageId;
+
+    // try/catch for SNS message ID in case not valid json
+    try {
+      snsMessageId = JSON.parse(message.Body).MessageId;
+    } catch (e) {
+      snsMessageId = '';
+    }
+
+    console.log('Received SQS message', sqsMessageId, 'with SNS messageId', snsMessageId, 'from queue', queueUrl);
+    console.log('Invoking lambda', functionName, 'with SQS message', sqsMessageId);
+
     lambda.invoke({
       FunctionName: functionName,
       InvocationType: "Event",
       Payload: JSON.stringify({
         source: "aws.sqs",
         QueueUrl: queueUrl,
-        Message: data.Messages[0]
+        Message: message
       })
     }, function(err) {
       if (err) {
