@@ -38,17 +38,19 @@ function pollQueue(queueUrl, functionName, remaining, done) {
       return pollQueue(queueUrl, functionName, remaining, done);
     }
 
-    message = data.Messages[0];
-    sqsMessageId = message.MessageId;
+    var message = data.Messages[0];
+    var sqsMessageId = message.MessageId;
+
+    console.log('Received SQS message', sqsMessageId, 'from queue', queueUrl);
 
     // try/catch for SNS message ID in case not valid json
     try {
-      snsMessageId = JSON.parse(message.Body).MessageId;
+      var snsMessageId = JSON.parse(message.Body).MessageId;
+      console.log('SQS message', sqsMessageId, 'has SNS message ID', snsMessageId)
     } catch (e) {
-      snsMessageId = '';
+      console.log('SQS message', sqsMessageId, 'not valid SNS message')
     }
 
-    console.log('Received SQS message', sqsMessageId, 'with SNS messageId', snsMessageId, 'from queue', queueUrl);
     console.log('Invoking lambda', functionName, 'with SQS message', sqsMessageId);
 
     lambda.invoke({
