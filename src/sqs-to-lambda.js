@@ -7,7 +7,7 @@
 
 var AWS = require('aws-sdk');
 var sqs = new AWS.SQS();
-var lambda = new AWS.Lambda();
+var lambda = new AWS.Lambda({maxRetries: 0});
 var config = CONFIG;
 var once = ONCE;
 
